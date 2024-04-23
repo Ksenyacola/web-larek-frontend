@@ -1,49 +1,72 @@
-export interface IProduct {
-    id: string;
-    category: 'софт-скил' | 'другое' | 'дополнительное' | 'кнопка';
-    title: string;
-    price: number | null;
-    imageUrl: string;
-    ordered: boolean;
-    addToBasket: () => void;
-    deleteFromBasket: () => void;
-  }
+export interface IPage {
+	catalog: HTMLElement[];
+	locked: boolean;
+}
 
+export interface IProductItem {
+	id: string;
+	description: string;
+	image: string;
+	title: string;
+	category: string;
+	price: number | null;
+}
 
-// Интерфейс базовой формы заказа
-export interface IBaseOrderForm {
-    payment: string;
-    address: string;
-  }
+export interface ICardActions {
+	onClick: (event: MouseEvent) => void;
+}
 
-  // Интерфейс формы с контактными данными
-  export interface IOrderContactsForm {
-    email: string;
-    phone: string;
-  }
+export interface ICard extends IProductItem {
+	buttonText: string;
+	itemCount: number | string;
+}
 
+export interface IModalData {
+	content: HTMLElement;
+}
 
-  // Объединенный интерфейс формы
-  type IOrderForm = IOrderContactsForm & IOrderContactsForm;
+export interface IBasketView {
+	items: HTMLElement[];
+	total: number | string;
+	selected: string[];
+}
 
-  // Интерфейс заказа
-  export interface IOrder extends IOrderForm {
-    items: IProduct[];
-    validation(): void;
-    clearOrder(): void;
-    postOrder(): void;
-  }
+export interface IFormState {
+	valid: boolean;
+	errors: string[];
+}
 
-  // Интерфейс состояния приложения
-  export interface IAppState {
-    catalog: IProduct[];
-    basket: IProduct[];
-    order: IOrder;
-    preview: IProduct;
-    checkProductBasket(): boolean;
-    clearBasket(): void;
-    getTotal(): number;
-    getBasketIds(): number;
-    getBasketLength(): number;
-    initOrder(): IOrder;
-  }
+export interface IOrderForm {
+	payment: string;
+	address: string;
+}
+
+export interface IContactsForm {
+	email: string;
+	phone: string;
+}
+
+export interface IOrder extends IOrderForm, IContactsForm {
+	total: number | string;
+	items: string[];
+}
+
+export interface IContacts extends IContactsForm {
+	items: string[];
+}
+
+export interface IActions {
+	onClick: (event: MouseEvent) => void;
+}
+
+export interface ISuccessActions {
+	onClick: () => void;
+}
+
+export interface ISuccess {
+	id: string;
+	total: number;
+}
+
+export type FormErrorsOrder = Partial<Record<keyof IOrder, string>>;
+export type FormErrorsContacts = Partial<Record<keyof IContacts, string>>;
