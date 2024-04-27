@@ -28,6 +28,12 @@ export class AppState extends Model<AppState> {
     };
 	events: IEvents;
 
+    handlePaymentMethodChange(paymentMethod: string) {
+        console.log("Trying to change payment method to:", paymentMethod);
+        this.selectPaymentMethod(paymentMethod);
+        console.log("Current payment method after change:", this.order.payment);
+    }
+
     selectPaymentMethod(paymentMethod: string) {
         if (paymentMethod === 'cash' || paymentMethod === 'online') {
             this.order.payment = paymentMethod;
