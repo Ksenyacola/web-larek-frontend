@@ -1,13 +1,13 @@
 import './scss/styles.scss';
 
-import { Page } from './components/psge';
+import { Page } from './components/page';
 import { cloneTemplate, ensureElement } from './utils/utils';
 import { EventEmitter } from './components/base/events';
-import { AppState, ProductItem } from './components/appData';
+import { AppState, ProductStatus} from './components/appData';
 import { Card } from './components/card';
 import { WebLarekAPI } from './components/webLarekApi';
-import { API_URL, CDN_URL, PaymentMethodTypeToLabel } from './utils/constants';
-import { IContactsForm, IOrder, IOrderForm } from './types';
+import { API_URL, CDN_URL } from './utils/constants';
+import { IContactsForm, IOrder, IOrderForm, IProductItem } from './types';
 import { Modal } from './components/common/modal';
 import { Basket } from './components/common/basket';
 import { Order } from './components/order';
@@ -50,7 +50,7 @@ events.on('catalog:install', () => {
 	});
 });
 
-events.on('card:select', (item: ProductItem) => {
+events.on('card:select', (item: IProductItem) => {
 	const card = new Card(cloneTemplate(productPreviewTemplate), {
 		onClick: () => {
 			events.emit('item:toggle', item);
@@ -70,6 +70,10 @@ events.on('card:select', (item: ProductItem) => {
 	});
 });
 
+events.on('item:toggle', (item: IProductItem) => {
+    appData.addToCart(item);
+});
+
 events.on('modal:open', () => {
 	page.locked = true;
 });
@@ -79,49 +83,47 @@ events.on('modal:close', () => {
 });
 
 events.on('basket:open', () => {
-	basket.items = appData.getCartItems().map((item, index) => {
-		const card = new Card(cloneTemplate(cartItemTemplate), {
-			onClick: () => {
-				events.emit('item:toggle', item);
-			},
-		});
-		card.index = (index + 1).toString();
-		return card.render({
-			title: item.title,
-			price: item.price,
-		});
-	});
-	page.counter = appData.getCartItems().length;
-	basket.selected = appData.getCartItems();
-	basket.total = appData.getTotal();
-	appData.order.total = appData.getTotal();
-	return modal.render({
-		content: basket.render(),
-	});
+    page.counter = appData.getCartItems().length;
+
+    basket.items = appData.getCartItems().map((item, index) => {
+        const card = new Card(cloneTemplate(cartItemTemplate), {
+            onClick: () => {
+                events.emit('item:toggle', item);
+            },
+        });
+        card.index = (index + 1).toString();
+        return card.render({
+            title: item.title,
+            price: item.price,
+        });
+    });
+
+    return modal.render({
+        content: basket.render(),
+    });
 });
 
-events.on('item:toggle', (item: ProductItem) => {
-	appData.addToCart(item);
 
-	page.counter = appData.getCartItems().length;
+
+events.on('basket:changed', (items: IProductItem[]) => {
+    page.counter = items.length;
+    basket.items = items.map((item, index) => {
+        const card = new Card(cloneTemplate(cartItemTemplate), {
+            onClick: () => {
+                events.emit('item:toggle', item);
+            },
+        });
+        card.index = (index + 1).toString();
+        return card.render({
+            title: item.title,
+            price: item.price,
+        });
+    });
+	const total = appData.getTotal();
+    appData.order.total = total;
+    basket.total = total;
 });
 
-events.on('basket:changed', (items: ProductItem[]) => {
-	basket.items = items.map((item, index) => {
-		const card = new Card(cloneTemplate(cartItemTemplate), {
-			onClick: () => {
-				events.emit('item:toggle', item);
-			},
-		});
-		card.index = (index + 1).toString();
-		return card.render({
-			title: item.title,
-			price: item.price,
-		});
-	});
-	appData.order.total = appData.getTotal();
-	basket.total = appData.getTotal();
-});
 
 events.on('order:open', () => {
 	modal.render({
@@ -134,11 +136,11 @@ events.on('order:open', () => {
 });
 
 events.on('payment:toggle', (name: HTMLElement) => {
-	if (!name.classList.contains('button_alt-active')) {
-		order.selectPaymentMethod(name);
-		appData.order.payment = PaymentMethodTypeToLabel[name.getAttribute('name')];
-	}
+    if (!name.classList.contains('button_alt-active')) {
+        appData.selectPaymentMethod(name.getAttribute('name'));
+    }
 });
+
 
 events.on(
 	/^order\..*:change/,
@@ -162,7 +164,7 @@ events.on('order:submit', () => {
 			errors: [],
 		}),
 	});
-	appData.order.items = appData.basketList.map((item) => item.id);
+	appData.setOrderItems(appData.basketList.map((item) => item.id));
 });
 
 events.on(
@@ -203,7 +205,14 @@ events.on('contacts:submit', () => {
 api
   .getProductList()
   .then((data) => {
-    appData.setCatalog(data);
+    const initializedData = data.map(item => {
+      const validStatus: ProductStatus = (item.status === 'sell' || item.status === 'basket') ? item.status : 'sell';
+      return {
+        ...item,
+        status: validStatus
+      };
+    });
+    appData.setCatalog(initializedData);
   })
   .catch((err) => {
     console.error(err);

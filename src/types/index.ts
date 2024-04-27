@@ -1,24 +1,29 @@
+import { ProductStatus } from "../components/appData";
+
 export interface IPage {
 	catalog: HTMLElement[];
 	locked: boolean;
 }
 
+
 export interface IProductItem {
-	id: string;
-	description: string;
-	image: string;
-	title: string;
-	category: string;
-	price: number | null;
+    id: string;
+    description: string;
+    image: string;
+    title: string;
+	status?: ProductStatus;
+    category: string;
+    price: number | null;
+    itemCount: number;
 }
 
 export interface ICardActions {
-	onClick: (event: MouseEvent) => void;
+    onClick: (event: MouseEvent) => void;
 }
 
 export interface ICard extends IProductItem {
-	buttonText: string;
-	itemCount: number | string;
+    buttonText: string;
+    itemCount: number;
 }
 
 export interface IModalData {

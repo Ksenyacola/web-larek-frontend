@@ -1,22 +1,25 @@
 import { Component } from '../base/components';
 import { createElement, ensureElement } from '../../utils/utils';
 import { EventEmitter } from '../base/events';
-import { ProductItem } from '../appData';
-import { IBasketView } from '../../types';
+import { AppState } from '../appData';
+import { IBasketView, IProductItem } from '../../types';
 
 export class Basket extends Component<IBasketView> {
 	protected _list: HTMLElement;
 	protected _total: HTMLElement;
 	protected _button: HTMLButtonElement;
 	protected _buttonDelete: HTMLButtonElement;
+	protected _appState: AppState;
 
 	constructor(container: HTMLElement, protected events: EventEmitter) {
 		super(container);
+		this._appState = new AppState({}, events);
 
 		this._list = ensureElement<HTMLElement>('.basket__list', this.container);
 		this._total = this.container.querySelector('.basket__price');
 		this._button = this.container.querySelector('.basket__button');
 		this._buttonDelete = this.container.querySelector('.basket__item-delete');
+
 
 		if (this._button) {
 			this._button.addEventListener('click', () => {
@@ -43,7 +46,7 @@ export class Basket extends Component<IBasketView> {
 		}
 	}
 
-	set selected(items: ProductItem[]) {
+	set selected(items: IProductItem[]) {
 		if (items.length) {
 			this.setDisabled(this._button, false);
 		} else {
@@ -54,4 +57,5 @@ export class Basket extends Component<IBasketView> {
 	set total(total: number | string) {
 		this.setText(this._total, `${total} синапсов`);
 	}
+
 }
