@@ -83,45 +83,39 @@ events.on('modal:close', () => {
 });
 
 events.on('basket:open', () => {
-    page.counter = appData.getCartItems().length;
-
-    basket.items = appData.getCartItems().map((item, index) => {
-        const card = new Card(cloneTemplate(cartItemTemplate), {
-            onClick: () => {
-                events.emit('item:toggle', item);
-            },
-        });
-        card.index = (index + 1).toString();
-        return card.render({
-            title: item.title,
-            price: item.price,
-        });
-    });
-
-    return modal.render({
+    modal.render({
         content: basket.render(),
     });
 });
 
 
-
 events.on('basket:changed', (items: IProductItem[]) => {
+
     page.counter = items.length;
+
     basket.items = items.map((item, index) => {
         const card = new Card(cloneTemplate(cartItemTemplate), {
             onClick: () => {
                 events.emit('item:toggle', item);
             },
         });
+
         card.index = (index + 1).toString();
         return card.render({
             title: item.title,
             price: item.price,
         });
     });
-	const total = appData.getTotal();
-    appData.order.total = total;
-    basket.total = total;
+
+    if (appData.getTotal) {
+        const total = appData.getTotal();
+        appData.order.total = total;
+        basket.total = total;
+    }
+
+    modal.render({
+        content: basket.render(),
+    });
 });
 
 
